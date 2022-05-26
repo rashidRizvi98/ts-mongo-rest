@@ -1,16 +1,30 @@
-const bcrypt = require("bcrypt");
-const jwt=require("jsonwebtoken")
+import bcrypt from 'bcrypt'
+import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken'
+import { Types } from 'mongoose';
+import { RefreshToken } from '../models/refreshToken';
 
-const User=require('../models/user')
-const RefreshToken=require('../models/refreshToken')
 
-const generateAccessToken = (_id, role) => {
+import { User, USER_ROLE_ENUM } from '../models/user';
+
+
+interface JwtPayload extends jwt.JwtPayload{
+    _id: Types.ObjectId
+    role: USER_ROLE_ENUM
+}
+
+export interface CustomRequest extends Request {
+    tokenPayload: JwtPayload
+}
+
+
+const generateAccessToken = (_id: Types.ObjectId, role: USER_ROLE_ENUM) => {
     return jwt.sign({ _id, role }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "10m",
     });
   };
 
-  const generateRefreshToken =async(_id, role) => {
+  const generateRefreshToken =async(_id: Types.ObjectId, role: USER_ROLE_ENUM) => {
     const refreshToken= jwt.sign({ _id, role }, process.env.REFRESH_TOKEN_SECRET, {
       expiresIn: "20m",
     });
@@ -18,7 +32,7 @@ const generateAccessToken = (_id, role) => {
     return refreshToken
   };  
 
-const registerUser=async(req,res)=>{
+const registerUser=async(req: Request,res: Response)=>{
 
     const user=await User.findOne({"email":req.body.email})
 
@@ -55,7 +69,7 @@ const registerUser=async(req,res)=>{
     }
 }
 
-const signIn=async(req,res)=>{
+const signIn=async(req: Request,res: Response)=>{
 
     const user=await User.findOne({"email":req.body.email})
 
@@ -76,7 +90,7 @@ const signIn=async(req,res)=>{
     }
 }
 
-const refreshTokenForUser=async(req,res)=>{
+const refreshTokenForUser=async(req: Request,res: Response)=>{
 
     const oldRefreshToken=await RefreshToken.findOneAndDelete({"refreshToken":req.body.refreshToken})
 
@@ -86,7 +100,7 @@ const refreshTokenForUser=async(req,res)=>{
         })
     }
 
-   const decoded = jwt.decode(req.body.refreshToken);
+   const decoded = jwt.decode(req.body.refreshToken) as JwtPayload;
     console.log("decoded: ",decoded)
     const accessToken=generateAccessToken(decoded._id,decoded.role)
     const refreshToken=await generateRefreshToken(decoded._id,decoded.role)
@@ -109,7 +123,8 @@ const signOut=async(req,res)=>{
 
 }
 
-const requireSignIn=(req,res,next)=>{
+
+const requireSignIn=(req: Request,res: Response,next)=>{
 
 const authHeader = req.headers["authorization"]
 if (authHeader == null) return res.status(400).json({
@@ -118,20 +133,21 @@ if (authHeader == null) return res.status(400).json({
 
 const token = authHeader.split(" ")[1]
 
-jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, tokenPayload: JwtPayload) => {
 if (err) { 
     res.status(400).json({
         message:"Invalid Token"
     })
  }
  else {
- req.user = user
+    (req as CustomRequest).tokenPayload=tokenPayload
+    console.debug(`TOKEN PAYLOAD:*** ${tokenPayload._id}`)
  next() //proceed to the next action in the calling function
  }
 }) //end of jwt.verify()
 }
 
-module.exports={
+export default{
     registerUser,
     signIn,
     refreshTokenForUser,

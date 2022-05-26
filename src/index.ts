@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import { dbConf } from './config'
 
 import devRouter from './routes/developer'
+import userRouter from './routes/user'
 
 const app: Express=express()
 
@@ -16,8 +17,8 @@ con.on("open",()=>{
 })
 
 app.use(express.json())
-
-app.use('/developer',devRouter)
+app.use('/user',userRouter)
+app.use('/developers',devRouter)
 
 
 app.listen(process.env.PORT,()=>{

@@ -1,10 +1,12 @@
 import { Developer } from "../models/developer"
 import { IDeveloper } from "../models/developer"
 import { Request,Response } from "express"
+import { CustomRequest } from "./user"
 
-const findDevelopers=async(req: Request,res: Response)=>{
+const findDevelopers=async(req: CustomRequest,res: Response)=>{
     try {
         const developers=await Developer.find()
+        console.debug(`GET DEVELOPERS HIT BY ${req.tokenPayload._id}`)
         res.json(developers)
     } catch (error) {
         res.send(error)

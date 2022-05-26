@@ -1,11 +1,14 @@
-const mongoose=require('mongoose')
-const Schema = mongoose.Schema;
+import { model, Schema } from "mongoose";
 
-const refreshTokenSchema=new Schema({
+export interface IRefreshToken{refreshToken: string}
+
+const refreshTokenSchema=new Schema<IRefreshToken>({
     refreshToken:{
         type: String,
         required: true
     },
+},{
+    versionKey: false
 })
 
-module.exports=mongoose.model('RefreshToken',refreshTokenSchema)
+export const RefreshToken=model<IRefreshToken>('RefreshToken',refreshTokenSchema)

@@ -1,12 +1,13 @@
-import mongoose from 'mongoose'
+import { model, Schema } from 'mongoose'
 
 export interface IDeveloper{
     name: string
     title: string
     assignedToProject: boolean
+
 }
 
-const developerSchema=new mongoose.Schema<IDeveloper>({
+const developerSchema=new Schema<IDeveloper>({
     name:{
         type: String,
         required: true
@@ -19,9 +20,10 @@ const developerSchema=new mongoose.Schema<IDeveloper>({
         type: Boolean,
         required: true,
         default: false
-    }
+    },
+
 },{
     versionKey: false
 })
 
-export const Developer=mongoose.model<IDeveloper>('Developer',developerSchema)
+export const Developer=model<IDeveloper>('Developer',developerSchema)

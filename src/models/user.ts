@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import  { model, Schema } from 'mongoose'
 
 export interface IUser{
   firstName: string
@@ -6,10 +6,15 @@ export interface IUser{
   username: string
   email: string
   hash_password: string
-  role: string
+  role: USER_ROLE_ENUM
 }
 
-const userSchema = new mongoose.Schema(
+export enum USER_ROLE_ENUM{
+  USER='USER',
+  ADMIN='ADMIN'
+}
+
+const userSchema = new Schema(
   {
     firstName: {
       type: String,
@@ -46,12 +51,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: [USER_ROLE_ENUM.USER, USER_ROLE_ENUM.ADMIN],
+      default: USER_ROLE_ENUM.USER,
     },
   },
   { timestamps: true }
 );
 
- export const User = mongoose.model<IUser>("User", userSchema);
+ export const User = model<IUser>("User", userSchema);
   
