@@ -1,20 +1,9 @@
 import  { model, Schema } from 'mongoose'
+import { IUserModel, USER_ROLE_ENUM } from '../types';
 
-export interface IUser{
-  firstName: string
-  lastName: string
-  username: string
-  email: string
-  hash_password: string
-  role: USER_ROLE_ENUM
-}
 
-export enum USER_ROLE_ENUM{
-  USER='USER',
-  ADMIN='ADMIN'
-}
 
-const userSchema = new Schema(
+const userSchema = new Schema<IUserModel>(
   {
     firstName: {
       type: String,
@@ -58,5 +47,5 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
- export const User = model<IUser>("User", userSchema);
+ export const User = model<IUserModel>("User", userSchema);
   

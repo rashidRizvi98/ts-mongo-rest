@@ -2,10 +2,12 @@ import bcrypt from 'bcrypt'
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken'
 import { Types } from 'mongoose';
+import { HttpError } from '../commons/error';
 import { RefreshToken } from '../models/refreshToken';
 
 
-import { User, USER_ROLE_ENUM } from '../models/user';
+import { User} from '../models/user';
+import { ErrorConstants, IAuthSuccessResponse, IRefreshTokenDto, IUserRegisterDto, IUserSigninDto, USER_ROLE_ENUM } from '../types';
 
 
 interface JwtPayload extends jwt.JwtPayload{
@@ -32,25 +34,23 @@ const generateAccessToken = (_id: Types.ObjectId, role: USER_ROLE_ENUM) => {
     return refreshToken
   };  
 
-const registerUser=async(req: Request,res: Response)=>{
+const registerUser=async(payload: IUserRegisterDto): Promise<IAuthSuccessResponse>=>{
 
-    const user=await User.findOne({"email":req.body.email})
-
+    const user=await User.findOne({"email": payload.email})
+    console.log(payload)
     if(user){
-        return res.status(400).json({
-            message:"User Already Registered"
-        })
+        throw new HttpError(400,ErrorConstants.USER_ALREADY_EXISTS);
     }
 
-    const hash_password =await bcrypt.hashSync(req.body.password, 10);
-    const firstName = req.body.firstName;
-    const lastName = req.body.lastName;
+    const hash_password =await bcrypt.hashSync(payload.password, 10);
+    const firstName = payload.firstName;
+    const lastName = payload.lastName;
 
     const newUser=new User(
         {
             firstName,
             lastName,
-            email: req.body.email,
+            email: payload.email,
             hash_password,
             username: firstName + lastName,
           }
@@ -58,66 +58,53 @@ const registerUser=async(req: Request,res: Response)=>{
 
     try {
         const obj=await User.create(newUser)
-
         const accessToken=generateAccessToken(obj._id,obj.role)
         const refreshToken=await generateRefreshToken(obj._id,obj.role)
-        res.status(201).json({accessToken,refreshToken})
+        return {accessToken,refreshToken}
     } catch (error) {
-        return res.status(500).json({
-            message: "Something Went Wrong",
-          });
+        console.error(error)
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)       
     }
 }
 
-const signIn=async(req: Request,res: Response)=>{
+const signIn=async(payload: IUserSigninDto): Promise<IAuthSuccessResponse>=>{
 
-    const user=await User.findOne({"email":req.body.email})
+    const user=await User.findOne({"email":payload.email})
 
     if(!user){
-        return res.status(400).json({
-            message:"User does not exists"
-        })
+              throw new HttpError(400,ErrorConstants.USER_DOES_NOT_EXISTS)   
     }
 
-    if(await bcrypt.compare(req.body.password,user.hash_password)){
+    if(await bcrypt.compare(payload.password,user.hash_password)){
         const accessToken=generateAccessToken(user._id,user.role)
         const refreshToken=await generateRefreshToken(user._id,user.role)
-        res.status(201).json({accessToken,refreshToken})
+        return {accessToken,refreshToken}
     }else{
-        res.status(401).json({
-            message: "Incorrect password",
-          });
+        throw new HttpError(401,ErrorConstants.INCORRECT_PASSWORD)
     }
 }
 
-const refreshTokenForUser=async(req: Request,res: Response)=>{
+const refreshTokenForUser=async(payload: IRefreshTokenDto): Promise<IAuthSuccessResponse>=>{
 
-    const oldRefreshToken=await RefreshToken.findOneAndDelete({"refreshToken":req.body.refreshToken})
+    const oldRefreshToken=await RefreshToken.findOneAndDelete({"refreshToken":payload.refreshToken})
 
     if (!oldRefreshToken) {
-        return res.status(400).json({
-            message:"Invalid RefreshToken"
-        })
+        throw new HttpError(400,ErrorConstants.INVALID_REFRESH_TOKEN)
     }
 
-   const decoded = jwt.decode(req.body.refreshToken) as JwtPayload;
+   const decoded = jwt.decode(payload.refreshToken) as JwtPayload;
     console.log("decoded: ",decoded)
     const accessToken=generateAccessToken(decoded._id,decoded.role)
     const refreshToken=await generateRefreshToken(decoded._id,decoded.role)
-    res.status(201).json({accessToken,refreshToken})
+    return {accessToken,refreshToken}
 }
 
-const signOut=async(req,res)=>{
+const signOut=async(payload: IRefreshTokenDto)=>{
 
     try {
-        await RefreshToken.findOneAndDelete({"refreshToken":req.body.refreshToken})
-        res.status(204).json({
-            message:"Success"
-        })
+        await RefreshToken.findOneAndDelete({"refreshToken":payload.refreshToken})
     } catch (error) {
-        res.status(500).json({
-            message:"Something Went Wrong"
-        })
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)
     }
 
 
