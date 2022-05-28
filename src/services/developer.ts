@@ -2,57 +2,58 @@ import { Developer } from "../models/developer"
 import { IDeveloper } from "../models/developer"
 import { Request,Response } from "express"
 import { CustomRequest } from "./user"
+import { HttpError } from "../commons/error"
+import { ErrorConstants } from "../types"
 
-const findDevelopers=async(req: CustomRequest,res: Response)=>{
+const findDevelopers=async()=>{
     try {
         const developers=await Developer.find()
-        console.debug(`GET DEVELOPERS HIT BY ${req.tokenPayload._id}`)
-        res.json(developers)
+        return developers
     } catch (error) {
-        res.send(error)
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)     
     }
 }
 
-const findDeveloper=async(req: Request,res: Response)=>{
+const findDeveloper=async(payload)=>{
     try {
-        const developer=await Developer.findById(req.params.id)
-        res.json(developer)
+        const developer=await Developer.findById(payload)
+        return developer
     } catch (error) {
-        res.send(error)
+        throw new HttpError(400,ErrorConstants.DEVELOPER_DOES_NOT_EXIST)  
     }
 }
 
-const createDeveloper=async(req: Request,res: Response)=>{
-    const developer=new Developer(req.body as IDeveloper)
+const createDeveloper=async(payload)=>{
+    const developer=new Developer(payload)
 
     try {
        const obj=await Developer.create(developer)
-        res.json(obj)
+        return obj
 
     } catch (error) {
-        res.send(error)
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)     
     }
 }
 
-const updateAssignment=async(req,res)=>{
+const updateAssignment=async(payload)=>{
 
     try {
-        const developer=await Developer.findById(req.params.id)
-        developer.assignedToProject=req.body.assignedToProject
+        const developer=await Developer.findById(payload.id)
+        developer.assignedToProject=payload.assignedToProject
         const updatedDeveloper=await developer.save()
-        res.json(updatedDeveloper)
+        return updatedDeveloper
     } catch (error) {
-        res.send('Error: ',error)
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)   
     }
 
 }
 
-const deleteDeveloper=async(req,res)=>{
+const deleteDeveloper=async(payload)=>{
     try {
-        const developer=await Developer.deleteOne({"_id":req.params.id})
-        res.json(developer)
+        const developer=await Developer.deleteOne({"_id":payload})
+        return developer
     } catch (error) {
-        res.send(error)
+        throw new HttpError(500,ErrorConstants.SOMETHING_WENT_WRONG)   
     }
 }
 

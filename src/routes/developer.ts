@@ -1,13 +1,14 @@
 import express,{Express} from 'express'
-import developerService from '../services/developer'
-import userService from '../services/user'
+import { requireSignIn } from '../commons/authMiddleware'
+import developerController from '../controllers/developer'
+
 
 const router=express.Router()
 
-router.get('/',userService.requireSignIn,developerService.findDevelopers)
-router.get('/:id',developerService.findDeveloper)
-router.post('/',developerService.createDeveloper)
-router.patch('/:id',developerService.updateAssignment)
-router.delete('/:id',developerService.deleteDeveloper)
+router.get('/',requireSignIn,developerController.findDevelopers)
+router.get('/:id',developerController.findDeveloper)
+router.post('/',developerController.createDeveloper)
+router.patch('/:id',developerController.updateAssignment)
+router.delete('/:id',developerController.deleteDeveloper)
 
 export default router
