@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken'
 import { Types } from 'mongoose';
 import { HttpError } from '../commons/error';
+import { Conf } from '../config';
 import { RefreshToken } from '../models/refreshToken';
 
 
@@ -21,13 +22,13 @@ export interface CustomRequest extends Request {
 
 
 const generateAccessToken = (_id: Types.ObjectId, role: USER_ROLE_ENUM) => {
-    return jwt.sign({ _id, role }, process.env.ACCESS_TOKEN_SECRET, {
+    return jwt.sign({ _id, role }, Conf.ACCESS_TOKEN_SECRET, {
       expiresIn: "10m",
     });
   };
 
   const generateRefreshToken =async(_id: Types.ObjectId, role: USER_ROLE_ENUM) => {
-    const refreshToken= jwt.sign({ _id, role }, process.env.REFRESH_TOKEN_SECRET, {
+    const refreshToken= jwt.sign({ _id, role }, Conf.REFRESH_TOKEN_SECRET, {
       expiresIn: "20m",
     });
     await RefreshToken.create({refreshToken})

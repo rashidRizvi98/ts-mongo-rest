@@ -1,14 +1,14 @@
 import express,{Express} from 'express'
 import 'dotenv/config'
 import mongoose from 'mongoose'
-import { dbConf } from './config'
+import { Conf } from './config'
 
 import devRouter from './routes/developer'
 import userRouter from './routes/user'
 
 const app: Express=express()
 
-mongoose.connect(dbConf.dbUrl)
+mongoose.connect(Conf.DB_URL)
 
 const con=mongoose.connection
   
@@ -21,6 +21,6 @@ app.use('/user',userRouter)
 app.use('/developers',devRouter)
 
 
-app.listen(process.env.PORT,()=>{
-    console.log(`SERVER IS RUNNING A: ${process.env.PORT}`)
+app.listen(Conf.PORT,()=>{
+    console.log(`SERVER IS RUNNING A: ${Conf.PORT}`)
 })

@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import jwt from 'jsonwebtoken'
+import { Conf } from "../config"
 import { CustomRequest, JwtPayload } from "../services/user"
 
 export const requireSignIn=(req: Request,res: Response,next)=>{
@@ -11,7 +12,7 @@ export const requireSignIn=(req: Request,res: Response,next)=>{
     
     const token = authHeader.split(" ")[1]
     
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, tokenPayload: JwtPayload) => {
+    jwt.verify(token, Conf.ACCESS_TOKEN_SECRET, (err, tokenPayload: JwtPayload) => {
     if (err) { 
         res.status(400).json({
             message:"Invalid Token"
